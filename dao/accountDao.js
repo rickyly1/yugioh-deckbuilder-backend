@@ -28,7 +28,54 @@ const documentClient = DynamoDBDocumentClient.from(client);
  * GSI's (partition/sort key)
  * deck_owner-deck_name-index : deck_owner/deck_name
  * username-email-index : username/email
+ * email-username-index : email/username
  */
+
+async function getUserByUsername(username) {
+    const command = new QueryCommand({
+        TableName,
+        IndexName: "username-email-index",
+        KeyConditionExpression: "#username = :username",
+        ExpressionAttributeNames: {
+            "#username" : "username",
+        },
+        ExpressionAttributeValues: { 
+            ":username" : { S: username },
+        }
+    });
+
+    try {
+        const response = await documentClient.send(command);
+        return response.Items[0] || null;
+
+    } catch (err) {
+        console.error("Error retrieving user by username: ", err);
+        throw { status: 500, message: "Error retrieving user by username" };
+    }
+}
+
+async function getUserByEmail(email) {
+    const command = new QueryCommand({
+        TableName,
+        IndexName: "email-username-index",
+        KeyConditionExpression: "#email = :email",
+        ExpressionAttributeNames: {
+            "#email" : "email",
+        },
+        ExpressionAttributeValues: { 
+            ":email" : { S: email },
+        }
+    });
+
+    try {
+        const response = await documentClient.send(command);
+        return response.Items[0] || null;
+
+    } catch (err) {
+        console.error("Error retrieving user by email: ", err);
+        throw { status: 500, message: "Error retrieving user by email" };
+    }
+}
 
 async function registerUser(user) {
     const command = new PutCommand({
@@ -36,17 +83,18 @@ async function registerUser(user) {
         Item: user
     });
 
-
     try {
-        const response = await documentClient.send(command);
-        return response;
+        await documentClient.send(command);
+        return user;
 
     } catch (err) {
         console.error("Error registering user: ", err);
-        return null;
+        throw { status: 500, message: "Error registering user" };
     }
 }
 
 module.exports = {
     registerUser,
+    getUserByUsername,
+    getUserByEmail
 };
