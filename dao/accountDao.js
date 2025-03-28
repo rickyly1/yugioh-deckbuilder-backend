@@ -6,10 +6,10 @@ const {
   UpdateCommand,
 } = require("@aws-sdk/lib-dynamodb");
 
-const TableName = process.env.DYNAMODB_TABLE_NAME;
-const AwsRegion = process.env.AWS_REGION || "us-west-1";
+const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME;
+const AWS_REGION = process.env.AWS_REGION || "us-west-1";
 
-const client = new DynamoDBClient({ region: `${AwsRegion}`});
+const client = new DynamoDBClient({ region: AWS_REGION});
 const documentClient = DynamoDBDocumentClient.from(client);
 
 /**
@@ -33,7 +33,7 @@ const documentClient = DynamoDBDocumentClient.from(client);
 
 async function getUserByUsername(username) {
     const command = new QueryCommand({
-        TableName,
+        TableName: TABLE_NAME,
         IndexName: "username-email-index",
         KeyConditionExpression: "#username = :username",
         ExpressionAttributeNames: {
@@ -56,7 +56,7 @@ async function getUserByUsername(username) {
 
 async function getUserByEmail(email) {
     const command = new QueryCommand({
-        TableName,
+        TableName: TABLE_NAME,
         IndexName: "email-username-index",
         KeyConditionExpression: "#email = :email",
         ExpressionAttributeNames: {
@@ -79,7 +79,7 @@ async function getUserByEmail(email) {
 
 async function registerUser(user) {
     const command = new PutCommand({
-        TableName,
+        TableName: TABLE_NAME,
         Item: user
     });
 
