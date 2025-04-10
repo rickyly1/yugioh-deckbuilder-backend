@@ -23,7 +23,8 @@ const documentClient = DynamoDBDocumentClient.from(client);
  * main_deck : list, max length 60
  * side_deck : list, max length 15
  * extra_deck : list, max length 15
- * notes: String
+ * notes : String
+ * 
  * 
  * GSI's (partition/sort key)
  * deck_owner-deck_name-index : deck_owner/deck_name
