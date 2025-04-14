@@ -1,6 +1,7 @@
 const accountDao = require("../dao/accountDao");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const uuid = require("uuid");
 const { logger } = require("../utils/logger");
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -57,7 +58,7 @@ async function registerUser(user) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = {
-        identifier: `USER#${uuidv4()}`,
+        identifier: `USER#${uuid.v4()}`,
         email,
         username,
         password: hashedPassword
@@ -73,6 +74,37 @@ async function registerUser(user) {
     }
 }
 
+async function loginUser(username, password) {
+    if (!username || !password) {
+        throw { status: 400, message: "Invalid username or password" };
+    }
+
+    try {
+        const user = await accountDao.getUserByUsername(username);
+
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            logger.info(`Failed login attempt: Invalid credentials for ${username}`);
+            throw { status: 401, message: "Invalid username or password" };
+        }
+
+        const token = jwt.sign(
+            { 
+                username: user.username,
+                email: user.email 
+            },
+            JWT_SECRET,
+            { expiresIn: "24h" }
+        );
+
+        logger.info(`Successful login by ${user.username}`);
+        return token;
+    } catch (error) {
+        console.error(error);
+        throw { status: 500, message: "Internal server error" };
+    }
+}
+
 module.exports = {
     registerUser,
+    loginUser
 }
